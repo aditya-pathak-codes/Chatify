@@ -1,0 +1,22 @@
+{
+  "name": "chatify-app",
+  "version": "1.0.0",
+  "description": "**Chatify** is a real-time chat application built using the **MERN stack (MongoDB, Express, React, Node.js)** along with **WebSockets** to enable instant messaging between users.",
+  "main": "index.js",
+  "scripts": {
+    "build": "npm install --prefix Backend && npm install --prefix Frontend && npm run build --prefix Frontend",
+    "start": "npm run start --prefix Backend"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/aditya-pathak-codes/Chatify.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/aditya-pathak-codes/Chatify/issues"
+  },
+  "homepage": "https://github.com/aditya-pathak-codes/Chatify#readme"
+}
