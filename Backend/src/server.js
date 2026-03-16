@@ -5,6 +5,7 @@ import path from "path";
 import authRoutes from "./routes/auth.routes.js";
 import messageRoutes from "./routes/message.routes.js";
 import { connectDB } from "./lib/db.js";
+import e from "express";
 
 dotenv.config();
 
@@ -14,7 +15,7 @@ const __dirname = path.resolve();
 const PORT = process.env.PORT || 3000;
 
 // middleware
-app.use(express.json());
+app.use(express.json());  //req.body parsing middleware
 
 app.use("/api/auth", authRoutes);
 app.use("/api/messages", messageRoutes);
