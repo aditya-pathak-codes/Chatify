@@ -7,3 +7,4 @@ export const sender = {
     name: ENV.EMAIL_FROM_NAME,
     email: ENV.EMAIL_FROM
 };
+
