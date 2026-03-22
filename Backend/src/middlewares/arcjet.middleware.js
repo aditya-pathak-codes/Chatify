@@ -1,3 +1,5 @@
+
+
 import aj from '../lib/arcjet.js';
 import { isSpoofedBot } from "@arcjet/inspect";
 
@@ -27,3 +29,4 @@ export const arjetProtection = async (req, res, next) => {
         next();
     }
 }
+
