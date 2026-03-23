@@ -110,7 +110,7 @@ export const getChatPartners = async (req, res) => {
         res.status(500).json({ message: "Internal server error" });
     }
 
-    //h
+    
 }
 
 
