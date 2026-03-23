@@ -2,10 +2,7 @@
 import Message from '../models/Message.js';
 import User from '../models/User.js';
 import cloudinary from '../lib/cloudinary.js';
-<<<<<<< HEAD
 import { ENV } from '../lib/env.js';
-=======
->>>>>>> 3cf2cc69a16a5cb925d9f4405c23287262f909a3
 
 export const getAllContacts = async (req, res) => {
     try{
@@ -117,11 +114,8 @@ export const getChatPartners = async (req, res) => {
     
 }
 
-<<<<<<< HEAD
 // endpoint messaging done between the sender and receiver.
 
-=======
->>>>>>> 3cf2cc69a16a5cb925d9f4405c23287262f909a3
 
 
 
