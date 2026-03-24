@@ -4,6 +4,7 @@ import LoginPage from './pages/LoginPage.jsx';
 import SignUpPage from './pages/SignUpPage.jsx';
 import { use } from 'react';
 import { useEffect } from 'react';
+import PageLoader from './components/PageLoader.jsx';
 
 function App() {
   const{checkAuth, isCheckingAuth}= useAuthStore();
