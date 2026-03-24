@@ -14,6 +14,8 @@ function App() {
 
   console.log({authUser});
 
+  if (isCheckingAuth) return <PageLoader />;
+
   return (
     <div className="min-h-screen bg-slate-900 relative flex items-center justify-center p-4 overflow-hidden">
 
@@ -31,10 +33,12 @@ function App() {
       
 
       <Routes> 
-       <Route path="/" element={<ChatPage />} />
-       <Route path="/login" element={<LoginPage />} />
-       <Route path="/signup" element={<SignUpPage />} />
+       <Route path="/" element= {authUser ? <ChatPage /> : <Navigate to="/login" />} />
+       <Route path="/login" element={!authUser ? <LoginPage /> : <Navigate to="/" />} />
+       <Route path="/signup" element={!authUser ? <SignUpPage /> : <Navigate to="/" />} />
       </Routes>
+
+
     </div>
   );
 }
