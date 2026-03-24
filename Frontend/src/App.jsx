@@ -2,16 +2,18 @@ import { Routes, Route } from 'react-router';
 import ChatPage from './pages/ChatPage.jsx';
 import LoginPage from './pages/LoginPage.jsx';
 import SignUpPage from './pages/SignUpPage.jsx';
-import { useAuthStore } from './store/useAuthStore.js';
+import { use } from 'react';
+import { useEffect } from 'react';
 
 function App() {
+  const{checkAuth, isCheckingAuth}= useAuthStore();
 
-  
-  const {authUser, login, isLoggedIn} = useAuthStore();
+  useEffect(() => {
+    checkAuth();
+  }, [checkAuth]);
 
-  console.log("Auth User in App.jsx:", authUser);
-  // console.log("Is Loading in App.jsx:", isLoading);
-  console.log("Is Logged In in App.jsx:", isLoggedIn);
+  console.log({authUser});
+
   return (
     <div className="min-h-screen bg-slate-900 relative flex items-center justify-center p-4 overflow-hidden">
 
@@ -26,7 +28,7 @@ function App() {
       {/* Cyan Glow - Bottom Right */}
       <div className="absolute bottom-0 -right-4 size-96 bg-cyan-500 opacity-20 blur-[100px] pointer-events-none" />
 
-      <button onClick={login} className='z-10'>Login</button>
+      
 
       <Routes> 
        <Route path="/" element={<ChatPage />} />
