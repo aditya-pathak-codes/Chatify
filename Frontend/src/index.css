@@ -6,4 +6,41 @@
     inherits: false;
     initial-value: 0deg;
     syntax: "<angle>";
+}
+
+@keyframes border-spin {
+  100% {
+    --border-angle: 360deg;
+  }
+}
+
+/* Auth Form Styles */
+@layer components {
+  .animate-border {
+    animation: border-spin 3s linear infinite;
+  }
+
+  .auth-input-label {
+    @apply block text-sm font-medium text-slate-300 mb-2;
+  }
+
+  .auth-input-icon {
+    @apply absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-400;
+  }
+
+  .input {
+    @apply w-full pl-10 pr-4 py-2.5 rounded-lg bg-slate-800/50 border border-slate-700 text-white placeholder-slate-500 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:ring-opacity-20 transition duration-200;
+  }
+
+  .auth-btn {
+    @apply w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white font-semibold py-2.5 rounded-lg hover:from-blue-700 hover:to-blue-800 transition duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2;
+  }
+
+  .auth-link {
+    @apply text-blue-400 hover:text-blue-300 transition duration-200 font-medium;
+  }
+
+  .auth-badge {
+    @apply px-3 py-1 bg-slate-800/50 border border-slate-700 rounded-full text-sm text-slate-300;
+  }
 } 
