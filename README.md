@@ -8,6 +8,19 @@ The application establishes **live server–client connections**, allowing messa
 
 Chatify highlights how modern applications maintain persistent connections between the client and server to support features such as live messaging, dynamic updates, and responsive user interaction.
 
+🔐 Custom JWT Authentication (no 3rd-party auth)
+⚡ Real-time Messaging via Socket.io
+🟢 Online/Offline Presence Indicators
+🔔 Notification & Typing Sounds (with toggle)
+📨 Welcome Emails on Signup (Resend)
+🗂️ Image Uploads (Cloudinary)
+🧰 REST API with Node.js & Express
+🧱 MongoDB for Data Persistence
+🚦 API Rate-Limiting powered by Arcjet
+🎨 Beautiful UI with React, Tailwind CSS & DaisyUI
+🧠 Zustand for State Management
+🧑‍💻 Git & GitHub Workflow (branches, PRs, merges)
+
 ---
 
 ## ⚙️ Technologies Used
