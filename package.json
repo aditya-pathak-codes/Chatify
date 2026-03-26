@@ -2,7 +2,7 @@
   "name": "chatify-app",
   "version": "1.0.0",
   "description": "**Chatify** is a real-time chat application built using the **MERN stack (MongoDB, Express, React, Node.js)** along with **WebSockets** to enable instant messaging between users.",
-  "main": "index.js",
+  "main": "Backend/src/server.js",
   "engines": {
     "node": ">=20.0.0"
   },
