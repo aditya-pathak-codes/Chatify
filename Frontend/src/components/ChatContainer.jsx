@@ -1,60 +1,81 @@
-import { useChatStore } from '../store/useChatStore';
+import { useEffect, useRef } from "react";
+import { useAuthStore } from "../store/useAuthStore";
+import { useChatStore } from "../store/useChatStore";
+import ChatHeader from "./ChatHeader";
+import NoChatHistoryPlaceholder from "./NoChatHistoryPlaceholder";
+import MessageInput from "./MessageInput";
+import MessagesLoadingSkeleton from "./MessagesLoadingSkeleton";
 
-export default function ChatContainer() {
-  const { messages, selectedUser } = useChatStore();
+function ChatContainer() {
+  const {
+    selectedUser,
+    getMessagesByUserId,
+    messages,
+    isMessagesLoading,
+    subscribeToMessages,
+    unsubscribeFromMessages,
+  } = useChatStore();
+  const { authUser } = useAuthStore();
+  const messageEndRef = useRef(null);
+
+  useEffect(() => {
+    getMessagesByUserId(selectedUser._id);
+    subscribeToMessages();
+
+    // clean up
+    return () => unsubscribeFromMessages();
+  }, [selectedUser, getMessagesByUserId, subscribeToMessages, unsubscribeFromMessages]);
+
+  useEffect(() => {
+    if (messageEndRef.current) {
+      messageEndRef.current.scrollIntoView({ behavior: "smooth" });
+    }
+  }, [messages]);
 
   return (
-    <div className="flex flex-col h-full">
-      {/* Chat Header */}
-      <div className="p-4 border-b border-slate-700 flex items-center gap-3 bg-slate-800/30">
-        {selectedUser?.profilePic && (
-          <img
-            src={selectedUser.profilePic}
-            alt={selectedUser.fullName}
-            className="w-10 h-10 rounded-full object-cover"
-          />
-        )}
-        <div>
-          <h3 className="text-white font-semibold">{selectedUser?.fullName}</h3>
-          <p className="text-xs text-slate-400">{selectedUser?.email}</p>
-        </div>
-      </div>
-
-      {/* Messages Area */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-3">
-        {messages && messages.length > 0 ? (
-          messages.map((msg, idx) => (
-            <div
-              key={idx}
-              className={`flex ${msg.senderId === selectedUser?._id ? 'justify-start' : 'justify-end'}`}
-            >
+    <>
+      <ChatHeader />
+      <div className="flex-1 px-6 overflow-y-auto py-8">
+        {messages.length > 0 && !isMessagesLoading ? (
+          <div className="max-w-3xl mx-auto space-y-6">
+            {messages.map((msg) => (
               <div
-                className={`max-w-xs px-4 py-2 rounded-lg ${
-                  msg.senderId === selectedUser?._id
-                    ? 'bg-slate-700 text-white'
-                    : 'bg-blue-600 text-white'
-                }`}
+                key={msg._id}
+                className={`chat ${msg.senderId === authUser._id ? "chat-end" : "chat-start"}`}
               >
-                <p>{msg.text}</p>
-                <p className="text-xs opacity-70 mt-1">
-                  {new Date(msg.timestamp).toLocaleTimeString()}
-                </p>
+                <div
+                  className={`chat-bubble relative ${
+                    msg.senderId === authUser._id
+                      ? "bg-cyan-600 text-white"
+                      : "bg-slate-800 text-slate-200"
+                  }`}
+                >
+                  {msg.image && (
+                    <img src={msg.image} alt="Shared" className="rounded-lg h-48 object-cover" />
+                  )}
+                  {msg.text && <p className="mt-2">{msg.text}</p>}
+                  <p className="text-xs mt-1 opacity-75 flex items-center gap-1">
+                    {new Date(msg.createdAt).toLocaleTimeString(undefined, {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}
+                  </p>
+                </div>
               </div>
-            </div>
-          ))
+            ))}
+            {/* 👇 scroll target */}
+            <div ref={messageEndRef} />
+          </div>
+        ) : isMessagesLoading ? (
+          <MessagesLoadingSkeleton />
         ) : (
-          <p className="text-slate-400 text-center py-8">No messages yet</p>
+          <NoChatHistoryPlaceholder name={selectedUser.fullName} />
         )}
       </div>
 
-      {/* Input Area */}
-      <div className="p-4 border-t border-slate-700 bg-slate-800/30">
-        <input
-          type="text"
-          placeholder="Type a message..."
-          className="w-full px-4 py-2 rounded-lg bg-slate-700 text-white placeholder-slate-400 outline-none focus:ring-2 focus:ring-blue-600"
-        />
-      </div>
-    </div>
+      <MessageInput />
+    </>
   );
 }
+
+export default ChatContainer;

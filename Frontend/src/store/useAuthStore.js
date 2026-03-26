@@ -2,12 +2,16 @@
 import {create} from 'zustand';
 import {axiosInstance} from '../lib/axios.js';
 import toast from 'react-hot-toast';
+import {io} from "socket.io-client";
+
+const BASE_URL = import.meta.env.MODE === 'development' ? "http://localhost:3000" : "/";
 
 export const useAuthStore = create((set, get) => ({
     authUser: null,
     isCheckingAuth: true,
     isSigningUp: false,
     isLoggingIn: false,
+    socket: null,
 
     checkAuth: async () => {
         try {
@@ -77,7 +81,10 @@ export const useAuthStore = create((set, get) => ({
     },
 
     connectSocket: () => {
-        // To be implemented with Socket.IO
+         const {authUser} = get()
+         if(!authUser || get().socket.connected) return 
+
+         const socket = io
     },
 
     disconnectSocket: () => {
