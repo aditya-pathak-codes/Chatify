@@ -3,7 +3,7 @@ import { axiosInstance } from "../lib/axios";
 import toast from "react-hot-toast";
 import { io } from "socket.io-client";
 
-const BASE_URL = import.meta.env.MODE === "development" ? "http://localhost:3000" : "/";
+const getSocketBaseURL = () => window.location.origin;
 
 export const useAuthStore = create((set, get) => ({
   authUser: null,
@@ -20,6 +20,7 @@ export const useAuthStore = create((set, get) => ({
       get().connectSocket();
     } catch (error) {
       console.log("Error in authCheck:", error);
+      get().disconnectSocket();
       set({ authUser: null });
     } finally {
       set({ isCheckingAuth: false });
@@ -37,7 +38,10 @@ export const useAuthStore = create((set, get) => ({
     } catch (error) {
       console.error("Signup error:", error);
       console.error("Error response:", error.response?.data);
-      toast.error(error.response?.data?.message || "Signup failed. Please try again.");
+      toast.error(
+        error.response?.data?.message ||
+          "Cannot reach the app server. Run npm run dev in the project root and keep it open."
+      );
     } finally {
       set({ isSigningUp: false });
     }
@@ -53,7 +57,10 @@ export const useAuthStore = create((set, get) => ({
 
       get().connectSocket();
     } catch (error) {
-      toast.error(error.response?.data?.message || "Login failed. Please try again.");
+      toast.error(
+        error.response?.data?.message ||
+          "Cannot reach the app server. Run npm run dev in the project root and keep it open."
+      );
     } finally {
       set({ isLoggingIn: false });
     }
@@ -84,10 +91,25 @@ export const useAuthStore = create((set, get) => ({
 
   connectSocket: () => {
     const { authUser } = get();
-    if (!authUser || get().socket?.connected) return;
+    if (!authUser) return;
+    if (get().socket?.connected) return;
 
-    const socket = io(BASE_URL, {
+    if (get().socket) {
+      get().socket.disconnect();
+    }
+
+    const socket = io(getSocketBaseURL(), {
       withCredentials: true, // this ensures cookies are sent with the connection
+      transports: ["websocket", "polling"],
+      autoConnect: false,
+    });
+
+    socket.on("connect_error", (error) => {
+      console.log("Socket connection error:", error.message);
+    });
+
+    socket.on("disconnect", () => {
+      set({ onlineUsers: [] });
     });
 
     socket.connect();
@@ -101,6 +123,13 @@ export const useAuthStore = create((set, get) => ({
   },
 
   disconnectSocket: () => {
-    if (get().socket?.connected) get().socket.disconnect();
+    const socket = get().socket;
+    if (socket) {
+      socket.off("getOnlineUsers");
+      socket.off("connect_error");
+      socket.disconnect();
+    }
+
+    set({ socket: null, onlineUsers: [] });
   },
 }));

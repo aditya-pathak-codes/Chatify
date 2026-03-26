@@ -1,6 +1,6 @@
 import jwt from "jsonwebtoken";
-import User from "../models/User.js";
 import { ENV } from "../lib/env.js";
+import { findUserById, sanitizeUser } from "../lib/localStore.js";
 
 export const socketAuthMiddleware = async (socket, next) => {
   try {
@@ -23,14 +23,14 @@ export const socketAuthMiddleware = async (socket, next) => {
     }
 
     // find the user fromdb
-    const user = await User.findById(decoded.userId).select("-password");
+    const user = await findUserById(decoded.userId);
     if (!user) {
       console.log("Socket connection rejected: User not found");
       return next(new Error("User not found"));
     }
 
     // attach user info to socket
-    socket.user = user;
+    socket.user = sanitizeUser(user);
     socket.userId = user._id.toString();
 
     console.log(`Socket authenticated for user: ${user.fullName} (${user._id})`);

@@ -1,7 +1,7 @@
 import { Server } from "socket.io";
 import http from "http";
 import express from "express";
-import { ENV } from "./env.js";
+import { isAllowedOrigin } from "./origins.js";
 import { socketAuthMiddleware } from "../middleware/socket.auth.middleware.js";
 
 const app = express();
@@ -9,7 +9,14 @@ const server = http.createServer(app);
 
 const io = new Server(server, {
   cors: {
-    origin: [ENV.CLIENT_URL],
+    origin: (origin, callback) => {
+      if (isAllowedOrigin(origin)) {
+        callback(null, true);
+        return;
+      }
+
+      callback(new Error("Origin not allowed by Socket.IO"));
+    },
     credentials: true,
   },
 });

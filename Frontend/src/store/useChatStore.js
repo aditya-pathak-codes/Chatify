@@ -3,6 +3,11 @@ import { axiosInstance } from "../lib/axios";
 import toast from "react-hot-toast";
 import { useAuthStore } from "./useAuthStore";
 
+const moveUserToFront = (users, user) => {
+  if (!user) return users;
+  return [user, ...users.filter((entry) => entry._id !== user._id)];
+};
+
 export const useChatStore = create((set, get) => ({
   allContacts: [],
   chats: [],
@@ -59,6 +64,7 @@ export const useChatStore = create((set, get) => ({
   sendMessage: async (messageData) => {
     const { selectedUser, messages } = get();
     const { authUser } = useAuthStore.getState();
+    if (!selectedUser || !authUser) return;
 
     const tempId = `temp-${Date.now()}`;
 
@@ -72,37 +78,46 @@ export const useChatStore = create((set, get) => ({
       isOptimistic: true, // flag to identify optimistic messages (optional)
     };
     // immidetaly update the ui by adding the message
-    set({ messages: [...messages, optimisticMessage] });
+    set((state) => ({
+      messages: [...state.messages, optimisticMessage],
+      chats: moveUserToFront(state.chats, selectedUser),
+    }));
 
     try {
       const res = await axiosInstance.post(`/messages/send/${selectedUser._id}`, messageData);
-      set({ messages: messages.concat(res.data) });
+      set((state) => ({
+        messages: state.messages.map((message) => (message._id === tempId ? res.data : message)),
+        chats: moveUserToFront(state.chats, selectedUser),
+      }));
     } catch (error) {
       // remove optimistic message on failure
-      set({ messages: messages });
+      set((state) => ({
+        messages: state.messages.filter((message) => message._id !== tempId),
+      }));
       toast.error(error.response?.data?.message || "Something went wrong");
     }
   },
 
   subscribeToMessages: () => {
-    const { selectedUser, isSoundEnabled } = get();
+    const { selectedUser } = get();
     if (!selectedUser) return;
 
     const socket = useAuthStore.getState().socket;
+    if (!socket) return;
 
+    socket.off("newMessage");
     socket.on("newMessage", (newMessage) => {
-      const isMessageSentFromSelectedUser = newMessage.senderId === selectedUser._id;
+      get().getMyChatPartners();
+
+      const activeUser = get().selectedUser;
+      const isMessageSentFromSelectedUser = activeUser && newMessage.senderId === activeUser._id;
       if (!isMessageSentFromSelectedUser) return;
 
-      const currentMessages = get().messages;
-      set({ messages: [...currentMessages, newMessage] });
-
-      if (isSoundEnabled) {
-        const notificationSound = new Audio("/sounds/notification.mp3");
-
-        notificationSound.currentTime = 0; // reset to start
-        notificationSound.play().catch((e) => console.log("Audio play failed:", e));
-      }
+      set((state) => ({
+        messages: state.messages.some((message) => message._id === newMessage._id)
+          ? state.messages
+          : [...state.messages, newMessage],
+      }));
     });
   },
 

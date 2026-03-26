@@ -2,7 +2,7 @@ import axios from "axios";
 
 const getBaseURL = () => {
   if (import.meta.env.MODE === "development") {
-    return "http://localhost:3000/api";
+    return "/api";
   }
   // In production, use environment variable or window location
   return import.meta.env.VITE_BACKEND_URL 

@@ -1,12 +1,16 @@
-import cloudinary from "../lib/cloudinary.js";
 import { getReceiverSocketId, io } from "../lib/socket.js";
-import Message from "../models/Message.js";
-import User from "../models/User.js";
+import {
+  createMessage,
+  findUserById,
+  listChatPartnersForUser,
+  listMessagesBetweenUsers,
+  listUsersExceptUser,
+} from "../lib/localStore.js";
 
 export const getAllContacts = async (req, res) => {
   try {
     const loggedInUserId = req.user._id;
-    const filteredUsers = await User.find({ _id: { $ne: loggedInUserId } }).select("-password");
+    const filteredUsers = await listUsersExceptUser(loggedInUserId);
 
     res.status(200).json(filteredUsers);
   } catch (error) {
@@ -20,12 +24,7 @@ export const getMessagesByUserId = async (req, res) => {
     const myId = req.user._id;
     const { id: userToChatId } = req.params;
 
-    const messages = await Message.find({
-      $or: [
-        { senderId: myId, receiverId: userToChatId },
-        { senderId: userToChatId, receiverId: myId },
-      ],
-    });
+    const messages = await listMessagesBetweenUsers(myId, userToChatId);
 
     res.status(200).json(messages);
   } catch (error) {
@@ -36,36 +35,28 @@ export const getMessagesByUserId = async (req, res) => {
 
 export const sendMessage = async (req, res) => {
   try {
-    const { text, image } = req.body;
+    const text = req.body.text?.trim() || "";
+    const image = req.body.image || "";
     const { id: receiverId } = req.params;
     const senderId = req.user._id;
 
     if (!text && !image) {
       return res.status(400).json({ message: "Text or image is required." });
     }
-    if (senderId.equals(receiverId)) {
+    if (senderId === receiverId) {
       return res.status(400).json({ message: "Cannot send messages to yourself." });
     }
-    const receiverExists = await User.exists({ _id: receiverId });
-    if (!receiverExists) {
+    const receiver = await findUserById(receiverId);
+    if (!receiver) {
       return res.status(404).json({ message: "Receiver not found." });
     }
 
-    let imageUrl;
-    if (image) {
-      // upload base64 image to cloudinary
-      const uploadResponse = await cloudinary.uploader.upload(image);
-      imageUrl = uploadResponse.secure_url;
-    }
-
-    const newMessage = new Message({
+    const newMessage = await createMessage({
       senderId,
       receiverId,
       text,
-      image: imageUrl,
+      image,
     });
-
-    await newMessage.save();
 
     const receiverSocketId = getReceiverSocketId(receiverId);
     if (receiverSocketId) {
@@ -82,23 +73,7 @@ export const sendMessage = async (req, res) => {
 export const getChatPartners = async (req, res) => {
   try {
     const loggedInUserId = req.user._id;
-
-    // find all the messages where the logged-in user is either sender or receiver
-    const messages = await Message.find({
-      $or: [{ senderId: loggedInUserId }, { receiverId: loggedInUserId }],
-    });
-
-    const chatPartnerIds = [
-      ...new Set(
-        messages.map((msg) =>
-          msg.senderId.toString() === loggedInUserId.toString()
-            ? msg.receiverId.toString()
-            : msg.senderId.toString()
-        )
-      ),
-    ];
-
-    const chatPartners = await User.find({ _id: { $in: chatPartnerIds } }).select("-password");
+    const chatPartners = await listChatPartnersForUser(loggedInUserId);
 
     res.status(200).json(chatPartners);
   } catch (error) {

@@ -1,0 +1,42 @@
+{
+  "users": [
+    {
+      "_id": "0a5ba472-721a-4f4e-8cec-5bb5598a2c54",
+      "fullName": "Aditya Pathak",
+      "email": "pathakadityax@gmail.com",
+      "password": "$2a$10$ybWeLX8yyQ1n6Sn5RNPCJ.eQG1.Qv3.OkeVl.jn0H36a2o3DTzDZG",
+      "profilePic": "",
+      "createdAt": "2026-03-26T19:05:11.854Z",
+      "updatedAt": "2026-03-26T19:05:11.854Z"
+    },
+    {
+      "_id": "bcd562f4-d243-4f8b-8764-0fb98926f4d4",
+      "fullName": "Adi",
+      "email": "thepathakadityax@gmail.com",
+      "password": "$2a$10$i6nbo.pWs45z.wiDUa4m/efYKbNg3adNH0inZMfnHV5shiPqwZwpy",
+      "profilePic": "",
+      "createdAt": "2026-03-26T19:06:30.500Z",
+      "updatedAt": "2026-03-26T19:06:30.500Z"
+    }
+  ],
+  "messages": [
+    {
+      "_id": "2bb3512e-2e0c-42cb-b36e-7e1ce46f31e6",
+      "senderId": "bcd562f4-d243-4f8b-8764-0fb98926f4d4",
+      "receiverId": "0a5ba472-721a-4f4e-8cec-5bb5598a2c54",
+      "text": "yo bro",
+      "image": "",
+      "createdAt": "2026-03-26T19:07:29.329Z",
+      "updatedAt": "2026-03-26T19:07:29.329Z"
+    },
+    {
+      "_id": "3a935f94-fd54-4d11-9e6b-fc3a1d0827b5",
+      "senderId": "0a5ba472-721a-4f4e-8cec-5bb5598a2c54",
+      "receiverId": "bcd562f4-d243-4f8b-8764-0fb98926f4d4",
+      "text": "hi man",
+      "image": "",
+      "createdAt": "2026-03-26T19:07:46.307Z",
+      "updatedAt": "2026-03-26T19:07:46.307Z"
+    }
+  ]
+}

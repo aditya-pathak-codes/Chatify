@@ -3,8 +3,6 @@ import { LogOutIcon, VolumeOffIcon, Volume2Icon } from "lucide-react";
 import { useAuthStore } from "../store/useAuthStore";
 import { useChatStore } from "../store/useChatStore";
 
-const mouseClickSound = new Audio("/sounds/mouse-click.mp3");
-
 function ProfileHeader() {
   const { logout, authUser, updateProfile } = useAuthStore();
   const { isSoundEnabled, toggleSound } = useChatStore();
@@ -78,12 +76,7 @@ function ProfileHeader() {
           {/* SOUND TOGGLE BTN */}
           <button
             className="text-slate-400 hover:text-slate-200 transition-colors"
-            onClick={() => {
-              // play click sound before toggling
-              mouseClickSound.currentTime = 0; // reset to start
-              mouseClickSound.play().catch((error) => console.log("Audio play failed:", error));
-              toggleSound();
-            }}
+            onClick={toggleSound}
           >
             {isSoundEnabled ? (
               <Volume2Icon className="size-5" />
