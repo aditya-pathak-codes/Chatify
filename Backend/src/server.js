@@ -7,10 +7,10 @@ import authRoutes from "./routes/auth.routes.js";
 import messageRoutes from "./routes/message.routes.js";
 import { connectDB } from "./lib/db.js";
 import cors from "cors";
+import {io, app, server} from "./lib/socket.js";
 
 dotenv.config();
 
-const app = express();
 const __dirname = path.resolve();
 
 const PORT = process.env.PORT || 3000;
@@ -35,7 +35,7 @@ if (process.env.NODE_ENV === "production") {
   });
 }
 
-app.listen(PORT, async () => {
+server.listen(PORT, async () => {
   console.log(`Server running on port ${PORT}`);
   await connectDB();
 });
