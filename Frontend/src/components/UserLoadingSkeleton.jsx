@@ -1,4 +1,4 @@
-function UsersLoadingSkeleton() {
+function UserLoadingSkeleton() {
   return (
     <div className="space-y-2">
       {[1, 2, 3].map((item) => (
@@ -15,4 +15,4 @@ function UsersLoadingSkeleton() {
     </div>
   );
 }
-export default UsersLoadingSkeleton;
+export default UserLoadingSkeleton;
