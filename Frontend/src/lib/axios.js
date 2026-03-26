@@ -1,6 +1,16 @@
 import axios from "axios";
 
+const getBaseURL = () => {
+  if (import.meta.env.MODE === "development") {
+    return "http://localhost:3000/api";
+  }
+  // In production, use environment variable or window location
+  return import.meta.env.VITE_BACKEND_URL 
+    ? `${import.meta.env.VITE_BACKEND_URL}/api`
+    : `${window.location.origin}/api`;
+};
+
 export const axiosInstance = axios.create({
-  baseURL: import.meta.env.MODE === "development" ? "http://localhost:3000/api" : "/api",
+  baseURL: getBaseURL(),
   withCredentials: true,
 });
