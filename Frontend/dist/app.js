@@ -25,6 +25,8 @@ let socketScriptPromise = null;
 let contactsPoller = null;
 let chatsPoller = null;
 let messagesPoller = null;
+const isLocalHost = ["localhost", "127.0.0.1"].includes(window.location.hostname);
+const apiBasePath = isLocalHost ? "/api" : "/.netlify/functions/api";
 
 const escapeHtml = (value = "") =>
   String(value)
@@ -69,13 +71,17 @@ const api = async (path, options = {}) => {
   let response;
 
   try {
-    response = await fetch(`/api${path}`, config);
+    response = await fetch(`${apiBasePath}${path}`, config);
   } catch {
     stopLiveUpdates();
     throw new Error("Connection to Chatify was lost. Refresh the page and try again.");
   }
 
   const contentType = response.headers.get("content-type") || "";
+  if (contentType.includes("text/html")) {
+    throw new Error("Chatify API route is misconfigured on this deployment.");
+  }
+
   const payload = contentType.includes("application/json")
     ? await response.json()
     : await response.text();
