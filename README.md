@@ -62,3 +62,23 @@ This project helps demonstrate and practice the following concepts:
 ## 📌 Conclusion
 
 Chatify serves as a practical example of how modern web applications implement **real-time communication systems**. By combining the power of the **MERN stack** with **WebSockets**, the application showcases how instant messaging platforms work behind the scenes and how scalable real-time systems can be developed using modern web technologies.
+
+---
+
+## Netlify Deployment
+
+This repository is now prepared for a Netlify deployment using:
+
+* Static frontend files from `Frontend/dist`
+* Serverless API routes from `netlify/functions`
+* Netlify Blobs for deployed data storage
+
+### Required Netlify environment variable
+
+Set this in the Netlify UI before deploying:
+
+* `CHATIFY_JWT_SECRET` - any long random secret string for signing auth cookies
+
+### Important deployment note
+
+The deployed Netlify version uses serverless polling for live updates instead of a persistent Socket.IO server. Local development can still use the Node backend server on port `3000`.
