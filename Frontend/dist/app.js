@@ -26,6 +26,20 @@ let contactsPoller = null;
 let chatsPoller = null;
 let messagesPoller = null;
 const isLocalHost = ["localhost", "127.0.0.1"].includes(window.location.hostname);
+const deployTokenKey = "chatify.deploy.token";
+
+const getStoredDeployToken = () => (isLocalHost ? "" : window.localStorage.getItem(deployTokenKey) || "");
+
+const setStoredDeployToken = (token) => {
+  if (isLocalHost) return;
+
+  if (token) {
+    window.localStorage.setItem(deployTokenKey, token);
+    return;
+  }
+
+  window.localStorage.removeItem(deployTokenKey);
+};
 
 const getApiUrl = (path) => {
   if (isLocalHost) {
@@ -66,9 +80,11 @@ const showToast = (message, type = "info") => {
 };
 
 const api = async (path, options = {}) => {
+  const deployToken = getStoredDeployToken();
   const config = {
     credentials: "include",
     headers: {
+      ...(!isLocalHost && deployToken ? { Authorization: `Bearer ${deployToken}` } : {}),
       ...(options.body ? { "Content-Type": "application/json" } : {}),
       ...(options.headers || {}),
     },
@@ -94,11 +110,25 @@ const api = async (path, options = {}) => {
     : await response.text();
 
   if (!response.ok) {
-    throw new Error(payload?.message || payload?.error || "Request failed");
+    if (!isLocalHost && response.status === 401) {
+      setStoredDeployToken("");
+    }
+
+    throw new Error(
+      payload?.message ||
+        payload?.error ||
+        (typeof payload === "string" && payload.trim() ? payload.trim() : "") ||
+        "Request failed"
+    );
   }
 
   return payload;
 };
+
+const normalizeAuthResponse = (payload) => ({
+  user: payload?.user?._id ? payload.user : payload,
+  token: payload?.token || "",
+});
 
 const getVisibleUsers = () => (state.activeTab === "contacts" ? state.contacts : state.chats);
 
@@ -242,10 +272,15 @@ const handleAuthSubmit = async (event) => {
   render();
 
   try {
-    state.authUser = await api(`/auth/${mode === "login" ? "login" : "signup"}`, {
-      method: "POST",
-      body: JSON.stringify(payload),
-    });
+    const authPayload = normalizeAuthResponse(
+      await api(`/auth/${mode === "login" ? "login" : "signup"}`, {
+        method: "POST",
+        body: JSON.stringify(payload),
+      })
+    );
+
+    state.authUser = authPayload.user;
+    setStoredDeployToken(authPayload.token);
 
     state.messages = [];
     state.selectedUser = null;
@@ -270,6 +305,7 @@ const handleLogout = async () => {
   }
 
   stopLiveUpdates();
+  setStoredDeployToken("");
   state.authUser = null;
   state.contacts = [];
   state.chats = [];
@@ -629,10 +665,17 @@ const boot = async () => {
   render();
 
   try {
+    if (!isLocalHost && !getStoredDeployToken()) {
+      state.authUser = null;
+      stopLiveUpdates();
+      return;
+    }
+
     state.authUser = await api("/auth/check");
     await startLiveUpdates();
     await hydrateWorkspace();
   } catch {
+    setStoredDeployToken("");
     state.authUser = null;
     stopLiveUpdates();
   } finally {

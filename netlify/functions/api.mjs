@@ -23,7 +23,18 @@ const json = (payload, init = {}) =>
     },
   });
 
-const getToken = (context) => context.cookies.get("jwt")?.value;
+const getBearerToken = (request) => {
+  const authHeader = request.headers.get("authorization") || "";
+  const [scheme, token] = authHeader.split(" ");
+
+  if (scheme?.toLowerCase() !== "bearer" || !token) {
+    return null;
+  }
+
+  return token;
+};
+
+const getToken = (request, context) => getBearerToken(request) || context.cookies.get("jwt")?.value;
 
 const setAuthCookie = (request, context, value) => {
   context.cookies.set({
@@ -41,8 +52,13 @@ const clearAuthCookie = (context) => {
   context.cookies.delete({ name: "jwt", path: "/" });
 };
 
-const requireAuth = async (context) => {
-  const token = getToken(context);
+const createAuthPayload = (user, token) => ({
+  user: sanitizeUser(user),
+  token,
+});
+
+const requireAuth = async (request, context) => {
+  const token = getToken(request, context);
   if (!token) {
     return { error: json({ message: "Unauthorized - No token provided" }, { status: 401 }) };
   }
@@ -108,7 +124,7 @@ const handleSignup = async (request, context) => {
   const token = jwt.sign({ userId: user._id }, JWT_SECRET, { expiresIn: "7d" });
   setAuthCookie(request, context, token);
 
-  return json(sanitizeUser(user), { status: 201 });
+  return json(createAuthPayload(user, token), { status: 201 });
 };
 
 const handleLogin = async (request, context) => {
@@ -133,11 +149,11 @@ const handleLogin = async (request, context) => {
   const token = jwt.sign({ userId: user._id }, JWT_SECRET, { expiresIn: "7d" });
   setAuthCookie(request, context, token);
 
-  return json(sanitizeUser(user));
+  return json(createAuthPayload(user, token));
 };
 
 const handleUpdateProfile = async (request, context) => {
-  const auth = await requireAuth(context);
+  const auth = await requireAuth(request, context);
   if (auth.error) return auth.error;
 
   const body = await parseJsonBody(request);
@@ -150,15 +166,15 @@ const handleUpdateProfile = async (request, context) => {
   return json(sanitizeUser(user));
 };
 
-const handleGetMessages = async (context, otherUserId) => {
-  const auth = await requireAuth(context);
+const handleGetMessages = async (request, context, otherUserId) => {
+  const auth = await requireAuth(request, context);
   if (auth.error) return auth.error;
 
   return json(await listMessagesBetweenUsers(auth.user._id, otherUserId));
 };
 
 const handleSendMessage = async (request, context, receiverId) => {
-  const auth = await requireAuth(context);
+  const auth = await requireAuth(request, context);
   if (auth.error) return auth.error;
 
   const receiver = await findUserById(receiverId);
@@ -189,57 +205,62 @@ const handleSendMessage = async (request, context, receiverId) => {
 };
 
 export default async (request, context) => {
-  const pathname = route(request);
+  try {
+    const pathname = route(request);
 
-  if (request.method === "GET" && pathname === "/health") {
-    return json({ ok: true, runtime: "netlify-functions" });
+    if (request.method === "GET" && pathname === "/health") {
+      return json({ ok: true, runtime: "netlify-functions" });
+    }
+
+    if (request.method === "POST" && pathname === "/auth/signup") {
+      return handleSignup(request, context);
+    }
+
+    if (request.method === "POST" && pathname === "/auth/login") {
+      return handleLogin(request, context);
+    }
+
+    if (request.method === "POST" && pathname === "/auth/logout") {
+      clearAuthCookie(context);
+      return json({ message: "Logged out successfully" });
+    }
+
+    if (request.method === "GET" && pathname === "/auth/check") {
+      const auth = await requireAuth(request, context);
+      return auth.error || json(auth.user);
+    }
+
+    if (request.method === "PUT" && pathname === "/auth/update-profile") {
+      return handleUpdateProfile(request, context);
+    }
+
+    if (request.method === "GET" && pathname === "/messages/contacts") {
+      const auth = await requireAuth(request, context);
+      return auth.error || json(await listUsersExceptUser(auth.user._id));
+    }
+
+    if (request.method === "GET" && pathname === "/messages/chats") {
+      const auth = await requireAuth(request, context);
+      return auth.error || json(await listChatPartnersForUser(auth.user._id));
+    }
+
+    const messagesMatch = pathname.match(/^\/messages\/([^/]+)$/);
+    if (request.method === "GET" && messagesMatch) {
+      return handleGetMessages(request, context, messagesMatch[1]);
+    }
+
+    const sendMatch = pathname.match(/^\/messages\/send\/([^/]+)$/);
+    if (request.method === "POST" && sendMatch) {
+      return handleSendMessage(request, context, sendMatch[1]);
+    }
+
+    return json({ message: "Not found" }, { status: 404 });
+  } catch (error) {
+    return json(
+      {
+        message: error instanceof Error ? error.message : "Internal server error",
+      },
+      { status: 500 }
+    );
   }
-
-  if (request.method === "POST" && pathname === "/auth/signup") {
-    return handleSignup(request, context);
-  }
-
-  if (request.method === "POST" && pathname === "/auth/login") {
-    return handleLogin(request, context);
-  }
-
-  if (request.method === "POST" && pathname === "/auth/logout") {
-    clearAuthCookie(context);
-    return json({ message: "Logged out successfully" });
-  }
-
-  if (request.method === "GET" && pathname === "/auth/check") {
-    const auth = await requireAuth(context);
-    return auth.error || json(auth.user);
-  }
-
-  if (request.method === "PUT" && pathname === "/auth/update-profile") {
-    return handleUpdateProfile(request, context);
-  }
-
-  if (request.method === "GET" && pathname === "/messages/contacts") {
-    const auth = await requireAuth(context);
-    return auth.error || json(await listUsersExceptUser(auth.user._id));
-  }
-
-  if (request.method === "GET" && pathname === "/messages/chats") {
-    const auth = await requireAuth(context);
-    return auth.error || json(await listChatPartnersForUser(auth.user._id));
-  }
-
-  const messagesMatch = pathname.match(/^\/messages\/([^/]+)$/);
-  if (request.method === "GET" && messagesMatch) {
-    return handleGetMessages(context, messagesMatch[1]);
-  }
-
-  const sendMatch = pathname.match(/^\/messages\/send\/([^/]+)$/);
-  if (request.method === "POST" && sendMatch) {
-    return handleSendMessage(request, context, sendMatch[1]);
-  }
-
-  return json({ message: "Not found" }, { status: 404 });
-};
-
-export const config = {
-  path: "/api/*",
 };
