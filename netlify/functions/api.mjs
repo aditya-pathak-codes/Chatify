@@ -61,7 +61,15 @@ const requireAuth = async (context) => {
   }
 };
 
-const route = (request) => new URL(request.url).pathname.replace(/^\/api/, "");
+const route = (request) => {
+  const url = new URL(request.url);
+  const queryRoute = url.searchParams.get("route");
+  if (queryRoute) {
+    return queryRoute.startsWith("/") ? queryRoute : `/${queryRoute}`;
+  }
+
+  return url.pathname.replace(/^\/api/, "");
+};
 
 const parseJsonBody = async (request) => {
   try {

@@ -26,7 +26,14 @@ let contactsPoller = null;
 let chatsPoller = null;
 let messagesPoller = null;
 const isLocalHost = ["localhost", "127.0.0.1"].includes(window.location.hostname);
-const apiBasePath = isLocalHost ? "/api" : "/.netlify/functions/api";
+
+const getApiUrl = (path) => {
+  if (isLocalHost) {
+    return `/api${path}`;
+  }
+
+  return `/.netlify/functions/api?route=${encodeURIComponent(path)}`;
+};
 
 const escapeHtml = (value = "") =>
   String(value)
@@ -71,7 +78,7 @@ const api = async (path, options = {}) => {
   let response;
 
   try {
-    response = await fetch(`${apiBasePath}${path}`, config);
+    response = await fetch(getApiUrl(path), config);
   } catch {
     stopLiveUpdates();
     throw new Error("Connection to Chatify was lost. Refresh the page and try again.");
