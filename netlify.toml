@@ -1,4 +1,5 @@
 [build]
+  command = "echo 'Using committed Frontend/dist for Netlify publish'"
   publish = "Frontend/dist"
   functions = "netlify/functions"
 
