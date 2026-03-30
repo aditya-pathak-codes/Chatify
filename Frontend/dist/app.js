@@ -25,9 +25,14 @@ let socketScriptPromise = null;
 let contactsPoller = null;
 let chatsPoller = null;
 let messagesPoller = null;
+const isLocalHost = ["localhost", "127.0.0.1"].includes(window.location.hostname);
 
 const getApiUrl = (path) => {
-  return `/api${path}`;
+  if (isLocalHost) {
+    return `/api${path}`;
+  }
+
+  return `/.netlify/functions/api?route=${encodeURIComponent(path)}`;
 };
 
 const escapeHtml = (value = "") =>
